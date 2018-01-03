@@ -3,5 +3,7 @@ Analizador de archivos Dockerfile para la asignatura Procesadores del Lenguaje. 
 
 # Comandos para ejecutar
 javacc TrabajoDockerfile.jj 
+
 javac *.java
+
 java -cp . Dockerfile < dockerfile.txt 
