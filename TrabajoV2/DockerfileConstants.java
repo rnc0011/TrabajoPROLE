@@ -11,9 +11,9 @@ public interface DockerfileConstants {
   /** RegularExpression Id. */
   int EOL = 2;
   /** RegularExpression Id. */
-  int OTRO = 3;
+  int COMANDO = 3;
   /** RegularExpression Id. */
-  int COMANDO = 4;
+  int CADENA = 4;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -23,8 +23,8 @@ public interface DockerfileConstants {
     "<EOF>",
     "\" \"",
     "\"\\n\"",
-    "<OTRO>",
     "<COMANDO>",
+    "<CADENA>",
   };
 
 }

@@ -3,23 +3,23 @@ import java.util.*;
 
 public class Dockerfile implements DockerfileConstants {
 
-  static String comando = "";
-  static int contador = 0;
-  static Map<String, Integer> mapaComandos = new HashMap<String, Integer>();
+        static String comando = "";
+        static int contador = 0;
+        static Map<String, Integer> mapaComandos = new HashMap<String, Integer>();
 
-  public static void main(String args[]) throws ParseException, java.io.FileNotFoundException {
+        public static void main(String args[]) throws ParseException, java.io.FileNotFoundException {
                 Dockerfile parser;
                 if(args.length < 1) {
-      parser = new Dockerfile(System.in);
+                        parser = new Dockerfile(System.in);
                 } else {
                         parser = new Dockerfile(new java.io.FileInputStream(args[0]));
                 }
                 parser.comienzo();
-    Iterator<String> it = mapaComandos.keySet().iterator();
-    while(it.hasNext()) {
-      String aux = it.next();
-      System.out.println("Comando: " + aux + " -> Veces: " + mapaComandos.get(aux));
-    }
+                Iterator<String> it = mapaComandos.keySet().iterator();
+                while(it.hasNext()) {
+                        String aux = it.next();
+                System.out.println("Comando: " + aux + " -> Veces: " + mapaComandos.get(aux));
+        }
     }
 
   static final public void comienzo() throws ParseException {
@@ -35,25 +35,36 @@ public class Dockerfile implements DockerfileConstants {
         break label_1;
       }
     }
-    jj_consume_token(0);
   }
 
   static final public void comandos() throws ParseException {
-                   Token tk;
+                  Token tk;
     tk = jj_consume_token(COMANDO);
-                  String cadena = tk.image;
-                  if(!mapaComandos.containsKey(cadena)) {
-                    mapaComandos.put(cadena, 1);
-                  } else {
-                    contador = mapaComandos.get(cadena);
-                    mapaComandos.put(cadena, contador++);
-                  }
+                        String cadena = tk.image;
+                    if(!mapaComandos.containsKey(cadena)) {
+                        mapaComandos.put(cadena, 1);
+                    } else {
+                        contador = mapaComandos.get(cadena);
+                        contador += 1;
+                        mapaComandos.put(cadena, contador);
+                    }
     cosas();
   }
 
   static final public void cosas() throws ParseException {
-   System.out.println("Hola");
-    comienzo();
+    jj_consume_token(CADENA);
+    label_2:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case CADENA:
+        ;
+        break;
+      default:
+        jj_la1[1] = jj_gen;
+        break label_2;
+      }
+      cosas();
+    }
   }
 
   static private boolean jj_initialized_once = false;
@@ -66,13 +77,13 @@ public class Dockerfile implements DockerfileConstants {
   static public Token jj_nt;
   static private int jj_ntk;
   static private int jj_gen;
-  static final private int[] jj_la1 = new int[1];
+  static final private int[] jj_la1 = new int[2];
   static private int[] jj_la1_0;
   static {
       jj_la1_init_0();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x10,};
+      jj_la1_0 = new int[] {0x8,0x10,};
    }
 
   /** Constructor with InputStream. */
@@ -93,7 +104,7 @@ public class Dockerfile implements DockerfileConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 1; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 2; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -107,7 +118,7 @@ public class Dockerfile implements DockerfileConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 1; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 2; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -124,7 +135,7 @@ public class Dockerfile implements DockerfileConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 1; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 2; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -134,7 +145,7 @@ public class Dockerfile implements DockerfileConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 1; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 2; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -150,7 +161,7 @@ public class Dockerfile implements DockerfileConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 1; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 2; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -159,7 +170,7 @@ public class Dockerfile implements DockerfileConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 1; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 2; i++) jj_la1[i] = -1;
   }
 
   static private Token jj_consume_token(int kind) throws ParseException {
@@ -215,7 +226,7 @@ public class Dockerfile implements DockerfileConstants {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 2; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {

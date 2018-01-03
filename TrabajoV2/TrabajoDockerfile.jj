@@ -1,6 +1,7 @@
 options {
-    BUILD_TOKEN_MANAGER=true;
-    COMMON_TOKEN_ACTION=false;
+    BUILD_TOKEN_MANAGER = true;
+    COMMON_TOKEN_ACTION = false;
+    //DEBUG_PARSER = true;
 }
 
 PARSER_BEGIN(Dockerfile)
@@ -9,51 +10,53 @@ import java.util.*;
 
 public class Dockerfile {
 
-  static String comando = "";
-  static int contador = 0;
-  static Map<String, Integer> mapaComandos = new HashMap<String, Integer>();
+	static String comando = "";
+  	static int contador = 0;
+  	static Map<String, Integer> mapaComandos = new HashMap<String, Integer>();
 
-  public static void main(String args[]) throws ParseException, java.io.FileNotFoundException {
-		Dockerfile parser;
-		if(args.length < 1) {
-      parser = new Dockerfile(System.in);
-		} else {
-			parser = new Dockerfile(new java.io.FileInputStream(args[0]));
-		}
-		parser.comienzo();
-    Iterator<String> it = mapaComandos.keySet().iterator();
-    while(it.hasNext()) {
-      String aux = it.next();
-      System.out.println("Comando: " + aux + " -> Veces: " + mapaComandos.get(aux));
+  	public static void main(String args[]) throws ParseException, java.io.FileNotFoundException {
+  		Dockerfile parser;
+  		if(args.length < 1) {
+  			parser = new Dockerfile(System.in);
+  		} else {
+  			parser = new Dockerfile(new java.io.FileInputStream(args[0]));
+  		}
+  		parser.comienzo();
+  		Iterator<String> it = mapaComandos.keySet().iterator();
+  		while(it.hasNext()) {
+  			String aux = it.next();
+      		System.out.println("Comando: " + aux + " -> Veces: " + mapaComandos.get(aux));
+      	}
     }
-    }
+
 }
 
 PARSER_END(Dockerfile)
 
-SKIP : {
-    " " | <EOL: ("\n") > | <OTRO: (~[])+ >
+SKIP: {
+    " " | < EOL: ("\n") >
 }
 
-TOKEN : {
+TOKEN: {
     < COMANDO: (["A" - "Z"])+ >
+|	< CADENA: (["a" - "z", "A" - "Z", "0" - "9", "/", ".", "&"])+ >
 }
 
-void comienzo() : {} {
-	(comandos())+ <EOF>
+void comienzo(): {} {
+	(comandos())+
 }
 
-void comandos() : {Token tk;} {
-  tk = <COMANDO> {String cadena = tk.image;
-                  if(!mapaComandos.containsKey(cadena)) {
-                    mapaComandos.put(cadena, 1);
-                  } else {
-                    contador = mapaComandos.get(cadena);
-                    mapaComandos.put(cadena, contador++);
-                  }}
-  cosas()
+void comandos(): {Token tk;} {
+	tk = <COMANDO> {String cadena = tk.image;
+                    if(!mapaComandos.containsKey(cadena)) {
+                    	mapaComandos.put(cadena, 1);
+                    } else {
+                    	contador = mapaComandos.get(cadena);
+                    	contador += 1; 
+                    	mapaComandos.put(cadena, contador);
+                    }} cosas()
 }
 
-void cosas() : {} {
-  {System.out.println("Hola");} comienzo()
+void cosas(): {} {
+	<CADENA> (cosas())*
 }
