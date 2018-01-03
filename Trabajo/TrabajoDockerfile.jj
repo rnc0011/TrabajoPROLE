@@ -1,0 +1,99 @@
+options{
+    BUILD_TOKEN_MANAGER = true;
+    COMMON_TOKEN_ACTION = false;
+    //DEBUG_TOKEN_MANAGER=true;
+}
+
+PARSER_BEGIN(Dockerfile)
+
+import java.util.*;
+/**
+ * Trabajo de Procesadores del Lenguaje. Analizador de archivos Dockerfile.
+ *
+ * @author: Raúl Negro Carpintero
+ * @author: Yeray Sardón Ibáñez
+ * @version: 1.0
+*/
+public class Dockerfile {
+    /**
+	 * Programa principal.
+     *
+	 * @author: Raúl Negro Carpintero
+     * @author: Yeray Sardón Ibáñez
+	 * @version: 1.0
+	*/
+    public static void main(String args[]) throws java.io.FileNotFoundException {
+
+        // Creación del Token Manager
+        DockerfileTokenManager tkmngr;
+        if (args.length < 1) {
+            tkmngr = new DockerfileTokenManager(new SimpleCharStream(System.in));
+        } else {
+            tkmngr = new DockerfileTokenManager(new SimpleCharStream(new java.io.FileInputStream(args[0]), 0, 0));
+        }
+
+        Token tk;
+
+        try {
+        	while ((tk = tkmngr.getNextToken()).kind != EOF) {}
+            Iterator it = tkmngr.mapaComandos.keySet().iterator();
+            while(it.hasNext()) {
+                String aux = (String)it.next();
+                System.out.println("Comando: " + aux + " -> Veces: " + tkmngr.mapaComandos.get(aux));
+            }
+	    } catch (TokenMgrError x) {
+		    System.out.println("Exiting.");
+		    throw x;
+	    }
+
+    }
+}
+PARSER_END(Dockerfile)
+
+TOKEN_MGR_DECLS:
+{
+    static String comando = "";
+    static int vecesComando = 0;
+    static Map<String, Integer> mapaComandos = new HashMap<String, Integer>();
+}
+
+// Declaración de las expresiones regulares
+TOKEN:{
+	< #COMANDO: (["A"-"Z"])+ > // Comandos utilizados en el dockerfile
+|	< #EOL: "\n" > // Fin de línea
+|	< #OTRO: (~[])+> // Cualquier otro carácter no considerado previamente
+}
+
+TOKEN:{ 
+	< COGER_COMANDO: <COMANDO> > {comando = image.toString();
+                                  if(!mapaComandos.containsKey(comando)) {
+                                    vecesComando++; mapaComandos.put(comando, vecesComando);
+                                  } else {
+                                    vecesComando = mapaComandos.get(comando);
+                                    vecesComando++;
+                                    mapaComandos.put(comando, vecesComando);
+                                  }} : ESPACIO
+}
+
+<ESPACIO> TOKEN:{
+    < IGNORAR_ESPACIO: <OTRO> > : COSAS
+}
+
+<COSAS> TOKEN:{
+    < IGNORAR_COSAS: <OTRO> > : SALTO
+}
+
+<SALTO> TOKEN:{
+    < SALTO_LINEA: <EOL> > : COMANDOS
+}
+
+<COMANDOS> TOKEN:{ 
+    < COGER_COMANDOS: <COMANDO> > {comando = image.toString();
+                                  if(!mapaComandos.containsKey(comando)) {
+                                    vecesComando++; mapaComandos.put(comando, vecesComando);
+                                  } else {
+                                    vecesComando = mapaComandos.get(comando);
+                                    vecesComando++;
+                                    mapaComandos.put(comando, vecesComando);
+                                  }} : ESPACIO
+}
