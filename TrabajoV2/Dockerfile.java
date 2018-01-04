@@ -6,6 +6,8 @@ public class Dockerfile implements DockerfileConstants {
         static String comando = "";
         static int contador = 0;
         static Map<String, Integer> mapaComandos = new HashMap<String, Integer>();
+        static List<String> listaDestinosAdd = new ArrayList<String>();
+        static List<String> listaDestinosCopy = new ArrayList<String>();
 
         public static void main(String args[]) throws ParseException, java.io.FileNotFoundException {
                 Dockerfile parser;
@@ -15,10 +17,23 @@ public class Dockerfile implements DockerfileConstants {
                         parser = new Dockerfile(new java.io.FileInputStream(args[0]));
                 }
                 parser.comienzo();
+
                 Iterator<String> it = mapaComandos.keySet().iterator();
                 while(it.hasNext()) {
                         String aux = it.next();
                 System.out.println("Comando: " + aux + " -> Veces: " + mapaComandos.get(aux));
+        }
+
+        Iterator<String> itDestinosAdd = listaDestinosAdd.iterator();
+        System.out.println("Los destinos del comando ADD son: ");
+        while(itDestinosAdd.hasNext()) {
+                System.out.println(itDestinosAdd.next());
+        }
+
+        Iterator<String> itDestinosCopy = listaDestinosCopy.iterator();
+        System.out.println("Los destinos del comando COPY son: ");
+        while(itDestinosCopy.hasNext()) {
+                System.out.println(itDestinosCopy.next());
         }
     }
 
@@ -40,19 +55,20 @@ public class Dockerfile implements DockerfileConstants {
   static final public void comandos() throws ParseException {
                   Token tk;
     tk = jj_consume_token(COMANDO);
-                        String cadena = tk.image;
-                    if(!mapaComandos.containsKey(cadena)) {
-                        mapaComandos.put(cadena, 1);
+                        String comando = tk.image;
+                    if(!mapaComandos.containsKey(comando)) {
+                        mapaComandos.put(comando, 1);
                     } else {
-                        contador = mapaComandos.get(cadena);
+                        contador = mapaComandos.get(comando);
                         contador += 1;
-                        mapaComandos.put(cadena, contador);
+                        mapaComandos.put(comando, contador);
                     }
-    cosas();
+    argumento(comando);
   }
 
-  static final public void cosas() throws ParseException {
-    jj_consume_token(CADENA);
+  static final public void argumento(String comando) throws ParseException {
+                                 Token tk;
+    tk = jj_consume_token(CADENA);
     label_2:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -63,8 +79,18 @@ public class Dockerfile implements DockerfileConstants {
         jj_la1[1] = jj_gen;
         break label_2;
       }
-      cosas();
+      masArgumentos(comando);
     }
+  }
+
+  static final public void masArgumentos(String comando) throws ParseException {
+                                     Token tk;
+    tk = jj_consume_token(CADENA);
+                       if(comando.equals("ADD")) {
+                    listaDestinosAdd.add(tk.image);
+                  } else if(comando.equals("COPY")) {
+                        listaDestinosCopy.add(tk.image);
+                  }
   }
 
   static private boolean jj_initialized_once = false;

@@ -10,4 +10,5 @@ EXPOSE 9989
 VOLUME /srv/data2
 RUN cd /srv/app && make build2
 ENTRYPOINT node index.js
+COPY testfile.txt c:\\
 
