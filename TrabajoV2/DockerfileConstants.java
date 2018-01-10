@@ -9,11 +9,13 @@ public interface DockerfileConstants {
   /** End of File. */
   int EOF = 0;
   /** RegularExpression Id. */
-  int EOL = 2;
+  int COM = 4;
   /** RegularExpression Id. */
-  int COMANDO = 3;
+  int COMANDO = 5;
   /** RegularExpression Id. */
-  int CADENA = 4;
+  int CADENA = 6;
+  /** RegularExpression Id. */
+  int BACK = 7;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -22,9 +24,12 @@ public interface DockerfileConstants {
   String[] tokenImage = {
     "<EOF>",
     "\" \"",
+    "\"\\t\"",
     "\"\\n\"",
+    "<COM>",
     "<COMANDO>",
     "<CADENA>",
+    "<BACK>",
   };
 
 }

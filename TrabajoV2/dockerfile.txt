@@ -1,14 +1,22 @@
-FROM quarry/monnode
-ADD . /srv/app
-RUN cd /srv/app && npm install
-RUN cd /srv/app && make build
-WORKDIR /srv/app
-VOLUME /srv/data
-ADD /my/source /src/dest
-EXPOSE 80
-EXPOSE 9989
-VOLUME /srv/data2
-RUN cd /srv/app && make build2
-ENTRYPOINT node index.js
-COPY testfile.txt c:\\
+FROM quarry/monnode 
+ADD . /srv/app 
+RUN cd /srv/app && npm install 
+RUN cd /srv/app && make build 
+WORKDIR /srv/app 
+VOLUME /srv/data 
+# praise the sun 
+ADD /my/source /src/dest 
+EXPOSE 80 
+EXPOSE 9989 
+COPY /carpeta/archivo /otraCarpeta/otroArchivo /carpetaDestino
+VOLUME /srv/data2 
+RUN cd /srv/app && make build2 
+ENTRYPOINT node index.js 
+COPY testfile.txt /carpeta/archivo /otraCarpeta/otroArchivo /etc/shadow
+RUN \
+	apt-get -y -qq install python redis-server
+
+RUN cd /opt && \
+	tar -xzf node-v0.10.28-linux-x64.tar.gz && \
+	cd /usr/local/bin
 

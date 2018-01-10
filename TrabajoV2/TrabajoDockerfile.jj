@@ -8,14 +8,34 @@ PARSER_BEGIN(Dockerfile)
 
 import java.util.*;
 
+/**
+ * Trabajo. Minicompilador con JavaCC para archivos Dockerfile.
+ * 
+ * @author Raul Negro Carpintero
+ * @author Yeray Sardón Ibáñez
+ * @version 1.0
+ */
 public class Dockerfile {
 
+	// Declaración de variables
 	static String comando = "";
   	static int contador = 0;
+  	static int contadorLineasRun = 1;
+  	static int maxLineasRun = 0;
+  	static int numeroRun = 0;
+  	static int contadorRun = 0;
+  	static int contadorCopy = 0;
+  	static int maxContadorCopy = 0;
+  	static int actualCopy = 0;
+  	static int numeroCopy = 0;
   	static Map<String, Integer> mapaComandos = new HashMap<String, Integer>();
   	static List<String> listaDestinosAdd = new ArrayList<String>();
   	static List<String> listaDestinosCopy = new ArrayList<String>();
 
+  	/**
+ 	 * Programa principal. 
+ 	 * 
+ 	*/
   	public static void main(String args[]) throws ParseException, java.io.FileNotFoundException {
   		Dockerfile parser;
   		if(args.length < 1) {
@@ -31,17 +51,29 @@ public class Dockerfile {
       		System.out.println("Comando: " + aux + " -> Veces: " + mapaComandos.get(aux));
       	}
 
+      	System.out.println("");
+
       	Iterator<String> itDestinosAdd = listaDestinosAdd.iterator();
       	System.out.println("Los destinos del comando ADD son: ");
       	while(itDestinosAdd.hasNext()) {
       		System.out.println(itDestinosAdd.next());
       	}
 
+      	System.out.println("");
+
       	Iterator<String> itDestinosCopy = listaDestinosCopy.iterator();
       	System.out.println("Los destinos del comando COPY son: ");
       	while(itDestinosCopy.hasNext()) {
       		System.out.println(itDestinosCopy.next());
       	}
+
+      	System.out.println("");
+
+      	System.out.println("El RUN con más líneas es el RUN" + numeroRun + " con " + maxLineasRun + " línea(s).");
+
+      	System.out.println("");
+
+      	System.out.println("El COPY con más archivos de origen es el COPY" + numeroCopy + " con " + maxContadorCopy + " archivo(s).");
     }
 
 }
@@ -49,37 +81,88 @@ public class Dockerfile {
 PARSER_END(Dockerfile)
 
 SKIP: {
-    " " | < EOL: ("\n") >
+    " " | "\t" | "\n" | < COM: "#" ( ~["\n"] )* "\n" >
 }
 
 TOKEN: {
     < COMANDO: (["A" - "Z"])+ >
-|	< CADENA: (["a" - "z", "A" - "Z", "0" - "9", "/", ".", "&", ":", "_", "-", "\\", "$"])+ >
+|	< CADENA: (["a" - "z", "A" - "Z", "0" - "9", "/", ".", "&", ":", "_", "-", "|", "<", ">", "\\", "$", "#"])+ >
+|	< BACK: "\\" "\n" >
 }
 
+/**
+ * Método comienzo. 
+ * 
+ */
 void comienzo(): {} {
 	(comandos())+
 }
 
+/**
+ * Método comando. Analiza todos los comandos del dockerfile y cuenta cuantos comandos hay de cada.
+ * 
+ */
 void comandos(): {Token tk;} {
-	tk = <COMANDO> {String comando = tk.image;
+	{contadorLineasRun = 1; contadorCopy = 0;}
+	tk = <COMANDO> {comando = tk.image;
+					if(comando.equals("RUN")) {
+						contadorRun++;
+					}
+					if(comando.equals("COPY")) {
+						actualCopy++;
+					}
                     if(!mapaComandos.containsKey(comando)) {
                     	mapaComandos.put(comando, 1);
                     } else {
                     	contador = mapaComandos.get(comando);
                     	contador += 1; 
                     	mapaComandos.put(comando, contador);
-                    }} argumento(comando)
+                    }} (back(comando))? argumento(comando)
 }
 
-void argumento(String comando): {Token tk;} {
-	tk = <CADENA> (masArgumentos(comando))*
+/**
+ * Método argumento. Añade a las listas de destinos los destinos de los comandos ADD y COPY.
+ * 
+ * @param comando
+ */
+void argumento(String comando): {String destino = "";} {
+	<CADENA> (back(comando))? (destino = masArgumentos(comando))*
+	{if(comando.equals("ADD")) {
+		listaDestinosAdd.add(destino);
+	} else if(comando.equals("COPY")) {
+		listaDestinosCopy.add(destino);
+	}}
 }
 
-void masArgumentos(String comando): {Token tk;} {
-	tk = <CADENA> {if(comando.equals("ADD")) {
-                    listaDestinosAdd.add(tk.image);
-                  } else if(comando.equals("COPY")) {
-                  	listaDestinosCopy.add(tk.image);
-                  }}
+/**
+ * Método masArgumentos. Utilizado para contar los archivos de origen del comando COPY.
+ * 
+ * @param comando
+ * @return tk.image - destino de los comandos ADD o COPY
+ */
+String masArgumentos(String comando): {Token tk;} {
+	tk = <CADENA> 
+	{if(comando.equals("COPY")) {
+		contadorCopy++;
+		if(contadorCopy >= maxContadorCopy) {
+			maxContadorCopy = contadorCopy;
+			numeroCopy = actualCopy;
+		}
+	}}
+	(back(comando))? {return tk.image;} 
+}
+
+/**
+ * Método back. Utilizado para contar las líneas del comando RUN.
+ * 
+ * @param comando
+ */
+void back(String comando): {} {
+	<BACK> {if(comando.equals("RUN")) {
+				contadorLineasRun++;
+				if(contadorLineasRun >= maxLineasRun) {
+					maxLineasRun = contadorLineasRun;
+					numeroRun = contadorRun;
+				}
+			}}
 }
