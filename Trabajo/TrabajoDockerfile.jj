@@ -1,99 +1,168 @@
-options{
+options {
     BUILD_TOKEN_MANAGER = true;
     COMMON_TOKEN_ACTION = false;
-    //DEBUG_TOKEN_MANAGER=true;
+    //DEBUG_PARSER = true;
 }
 
 PARSER_BEGIN(Dockerfile)
 
 import java.util.*;
+
 /**
- * Trabajo de Procesadores del Lenguaje. Analizador de archivos Dockerfile.
- *
- * @author: Raúl Negro Carpintero
- * @author: Yeray Sardón Ibáñez
- * @version: 1.0
-*/
+ * Trabajo. Minicompilador con JavaCC para archivos Dockerfile.
+ * 
+ * @author Raul Negro Carpintero
+ * @author Yeray Sardón Ibáñez
+ * @version 1.0
+ */
 public class Dockerfile {
-    /**
-	 * Programa principal.
-     *
-	 * @author: Raúl Negro Carpintero
-     * @author: Yeray Sardón Ibáñez
-	 * @version: 1.0
-	*/
-    public static void main(String args[]) throws java.io.FileNotFoundException {
 
-        // Creación del Token Manager
-        DockerfileTokenManager tkmngr;
-        if (args.length < 1) {
-            tkmngr = new DockerfileTokenManager(new SimpleCharStream(System.in));
-        } else {
-            tkmngr = new DockerfileTokenManager(new SimpleCharStream(new java.io.FileInputStream(args[0]), 0, 0));
-        }
+	// Declaración de variables
+	static String comando = "";
+  	static int contador = 0;
+  	static int contadorLineasRun = 1;
+  	static int maxLineasRun = 0;
+  	static int numeroRun = 0;
+  	static int contadorRun = 0;
+  	static int contadorCopy = 0;
+  	static int maxContadorCopy = 0;
+  	static int actualCopy = 0;
+  	static int numeroCopy = 0;
+  	static Map<String, Integer> mapaComandos = new HashMap<String, Integer>();
+  	static List<String> listaDestinosAdd = new ArrayList<String>();
+  	static List<String> listaDestinosCopy = new ArrayList<String>();
 
-        Token tk;
+  	/**
+ 	 * Programa principal. 
+ 	 * 
+ 	*/
+  	public static void main(String args[]) throws ParseException, java.io.FileNotFoundException {
+  		Dockerfile parser;
+  		if(args.length < 1) {
+  			parser = new Dockerfile(System.in);
+  		} else {
+  			parser = new Dockerfile(new java.io.FileInputStream(args[0]));
+  		}
+  		parser.comienzo();
 
-        try {
-        	while ((tk = tkmngr.getNextToken()).kind != EOF) {}
-            Iterator it = tkmngr.mapaComandos.keySet().iterator();
-            while(it.hasNext()) {
-                String aux = (String)it.next();
-                System.out.println("Comando: " + aux + " -> Veces: " + tkmngr.mapaComandos.get(aux));
-            }
-	    } catch (TokenMgrError x) {
-		    System.out.println("Exiting.");
-		    throw x;
-	    }
+  		Iterator<String> it = mapaComandos.keySet().iterator();
+  		while(it.hasNext()) {
+  			String aux = it.next();
+      		System.out.println("Comando: " + aux + " -> Veces: " + mapaComandos.get(aux));
+      	}
 
+      	System.out.println("");
+
+      	Iterator<String> itDestinosAdd = listaDestinosAdd.iterator();
+      	System.out.println("Los destinos del comando ADD son: ");
+      	while(itDestinosAdd.hasNext()) {
+      		System.out.println(itDestinosAdd.next());
+      	}
+
+      	System.out.println("");
+
+      	Iterator<String> itDestinosCopy = listaDestinosCopy.iterator();
+      	System.out.println("Los destinos del comando COPY son: ");
+      	while(itDestinosCopy.hasNext()) {
+      		System.out.println(itDestinosCopy.next());
+      	}
+
+      	System.out.println("");
+
+      	System.out.println("El RUN con más líneas es el RUN" + numeroRun + " con " + maxLineasRun + " línea(s).");
+
+      	System.out.println("");
+
+      	System.out.println("El COPY con más archivos de origen es el COPY" + numeroCopy + " con " + maxContadorCopy + " archivo(s).");
     }
+
 }
+
 PARSER_END(Dockerfile)
 
-TOKEN_MGR_DECLS:
-{
-    static String comando = "";
-    static int vecesComando = 0;
-    static Map<String, Integer> mapaComandos = new HashMap<String, Integer>();
+SKIP: {
+    " " | "\t" | "\n" | < COM: "#" ( ~["\n"] )* "\n" >
 }
 
-// Declaración de las expresiones regulares
-TOKEN:{
-	< #COMANDO: (["A"-"Z"])+ > // Comandos utilizados en el dockerfile
-|	< #EOL: "\n" > // Fin de línea
-|	< #OTRO: (~[])+> // Cualquier otro carácter no considerado previamente
+TOKEN: {
+    < COMANDO: (["A" - "Z"])+ >
+|	< CADENA: (["a" - "z", "A" - "Z", "0" - "9", "/", ".", "&", ":", "_", "-", "|", "<", ">", "\\", "$", "#"])+ >
+|	< BACK: "\\" "\n" >
 }
 
-TOKEN:{ 
-	< COGER_COMANDO: <COMANDO> > {comando = image.toString();
-                                  if(!mapaComandos.containsKey(comando)) {
-                                    vecesComando++; mapaComandos.put(comando, vecesComando);
-                                  } else {
-                                    vecesComando = mapaComandos.get(comando);
-                                    vecesComando++;
-                                    mapaComandos.put(comando, vecesComando);
-                                  }} : ESPACIO
+/**
+ * Método comienzo. 
+ * 
+ */
+void comienzo(): {} {
+	(comandos())+
 }
 
-<ESPACIO> TOKEN:{
-    < IGNORAR_ESPACIO: <OTRO> > : COSAS
+/**
+ * Método comando. Analiza todos los comandos del dockerfile y cuenta cuantos comandos hay de cada.
+ * 
+ */
+void comandos(): {Token tk;} {
+	{contadorLineasRun = 1; contadorCopy = 0;}
+	tk = <COMANDO> {comando = tk.image;
+					if(comando.equals("RUN")) {
+						contadorRun++;
+					}
+					if(comando.equals("COPY")) {
+						actualCopy++;
+					}
+                    if(!mapaComandos.containsKey(comando)) {
+                    	mapaComandos.put(comando, 1);
+                    } else {
+                    	contador = mapaComandos.get(comando);
+                    	contador += 1; 
+                    	mapaComandos.put(comando, contador);
+                    }} (back(comando))? argumento(comando)
 }
 
-<COSAS> TOKEN:{
-    < IGNORAR_COSAS: <OTRO> > : SALTO
+/**
+ * Método argumento. Añade a las listas de destinos los destinos de los comandos ADD y COPY.
+ * 
+ * @param comando
+ */
+void argumento(String comando): {String destino = "";} {
+	<CADENA> (back(comando))? (destino = masArgumentos(comando))*
+	{if(comando.equals("ADD")) {
+		listaDestinosAdd.add(destino);
+	} else if(comando.equals("COPY")) {
+		listaDestinosCopy.add(destino);
+	}}
 }
 
-<SALTO> TOKEN:{
-    < SALTO_LINEA: <EOL> > : COMANDOS
+/**
+ * Método masArgumentos. Utilizado para contar los archivos de origen del comando COPY.
+ * 
+ * @param comando
+ * @return tk.image - destino de los comandos ADD o COPY
+ */
+String masArgumentos(String comando): {Token tk;} {
+	tk = <CADENA> 
+	{if(comando.equals("COPY")) {
+		contadorCopy++;
+		if(contadorCopy >= maxContadorCopy) {
+			maxContadorCopy = contadorCopy;
+			numeroCopy = actualCopy;
+		}
+	}}
+	(back(comando))? {return tk.image;} 
 }
 
-<COMANDOS> TOKEN:{ 
-    < COGER_COMANDOS: <COMANDO> > {comando = image.toString();
-                                  if(!mapaComandos.containsKey(comando)) {
-                                    vecesComando++; mapaComandos.put(comando, vecesComando);
-                                  } else {
-                                    vecesComando = mapaComandos.get(comando);
-                                    vecesComando++;
-                                    mapaComandos.put(comando, vecesComando);
-                                  }} : ESPACIO
+/**
+ * Método back. Utilizado para contar las líneas del comando RUN.
+ * 
+ * @param comando
+ */
+void back(String comando): {} {
+	<BACK> {if(comando.equals("RUN")) {
+				contadorLineasRun++;
+				if(contadorLineasRun >= maxLineasRun) {
+					maxLineasRun = contadorLineasRun;
+					numeroRun = contadorRun;
+				}
+			}}
 }
